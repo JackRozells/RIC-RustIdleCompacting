@@ -1,0 +1,21 @@
+[package]
+name = "idlepack"
+version = "0.2.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Idle compaction for the Claude and Codex desktop apps: compacts a big idle session while its prompt cache is still warm."
+license = "MIT"
+readme = "README.md"
+keywords = ["claude", "codex", "prompt-cache", "compaction", "llm"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

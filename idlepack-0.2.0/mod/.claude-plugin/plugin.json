@@ -1,0 +1,7 @@
+{
+  "name": "idlepack",
+  "version": "0.2.0",
+  "description": "Idle compaction everywhere Claude Code runs, the Desktop app's Code tab included: compacts a big idle session just before its prompt cache expires.",
+  "license": "MIT",
+  "keywords": ["compaction", "prompt-cache", "idle"]
+}
