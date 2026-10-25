@@ -1,7 +1,10 @@
 # idlepack
 
-Idle compaction for the **Claude** and **Codex desktop apps**, as one Rust binary
-you install like [rtk](https://github.com/rtk-ai/rtk).
+[![ci](https://github.com/JackRozells/RIC-RustIdleCompacting/actions/workflows/release.yml/badge.svg)](https://github.com/JackRozells/RIC-RustIdleCompacting/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+**RIC: Rust Idle Compacting.** Idle compaction for the **Claude** and **Codex
+desktop apps**, as one Rust binary you install like [rtk](https://github.com/rtk-ai/rtk).
 
 When a long conversation sits idle past its prompt-cache lifetime, the next
 message re-sends the whole context uncached. Claude Code 2.1.299 fixed that in
@@ -18,30 +21,42 @@ turn ends ──► wait until 90% of the cache lifetime has passed
 
 ## Install
 
-From a checkout (needs Rust/cargo; see [rustup.rs](https://rustup.rs)):
+One line, macOS / Linux:
 
 ```sh
-# macOS / Linux
-sh install.sh
-
-# Windows (PowerShell)
-powershell -ExecutionPolicy Bypass -File install.ps1
+curl -fsSL https://raw.githubusercontent.com/JackRozells/RIC-RustIdleCompacting/main/install.sh | sh
 ```
 
-Once the repo is on GitHub and tagged (the workflow in `.github/workflows`
-builds release binaries), the rtk-style one-liners work too:
+Windows (PowerShell):
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/OWNER/idlepack/main/install.sh | IDLEPACK_REPO=OWNER/idlepack sh
-```
 ```powershell
-$env:IDLEPACK_REPO='OWNER/idlepack'; irm https://raw.githubusercontent.com/OWNER/idlepack/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/JackRozells/RIC-RustIdleCompacting/main/install.ps1 | iex
+```
+
+The installer downloads the prebuilt binary for your platform from the
+[latest release](https://github.com/JackRozells/RIC-RustIdleCompacting/releases/latest)
+(checking its SHA-256), or builds from source with cargo if there isn't one,
+then runs `idlepack init`. Building from source needs Rust; see
+[rustup.rs](https://rustup.rs).
+
+From a checkout:
+
+```sh
+git clone https://github.com/JackRozells/RIC-RustIdleCompacting.git
+cd RIC-RustIdleCompacting
+sh install.sh                                          # macOS / Linux
+powershell -ExecutionPolicy Bypass -File install.ps1   # Windows
 ```
 
 Or by hand: `cargo install --path .` then `idlepack init`.
 
 Then **fully quit and restart** the Claude desktop app and the Codex desktop app
 so they pick it up.
+
+Installer variables: `IDLEPACK_BIN_DIR` (where the binary goes; default
+`~/.local/bin`, or `%LOCALAPPDATA%\idlepack\bin` on Windows),
+`IDLEPACK_FROM_SOURCE=1` (always build with cargo), `IDLEPACK_NO_INIT=1` (install
+the binary only), `IDLEPACK_REPO` (install from a fork).
 
 ## Commands
 
@@ -184,14 +199,35 @@ was before.
 
 ## Development
 
+| Path | What's there |
+|---|---|
+| `src/` | The `idlepack` binary: CLI, config, Claude Stop hook, and the Codex shim (`src/codex/`). |
+| `mod/` | The Claude Code mod `init` installs (hooks module, policy, and its tests). |
+| `tests/` | Integration tests: CLI round trip, and the shim against a fake app-server. |
+| `examples/fake_app_server.rs` | A stand-in Codex app-server for trying the shim by hand. |
+| `install.sh`, `install.ps1` | The installers. |
+
 ```sh
+cargo clippy --all-targets -- -D warnings
 cargo test                     # unit tests, CLI round trip, the shim against a fake app-server
 claude plugin test mod         # the mod, against Claude Code's own test host (Claude Code CLI ≥ 2.1.284)
 claude plugin validate mod
 ```
 
-`examples/fake_app_server.rs` is a stand-in Codex app-server for trying the shim
-by hand: `IDLEPACK_CODEX_REAL=target/debug/examples/fake_app_server idlepack __codex-shim app-server`.
+To try the shim by hand:
+`IDLEPACK_CODEX_REAL=target/debug/examples/fake_app_server idlepack __codex-shim app-server`.
+
+CI runs clippy and the tests on Linux, macOS and Windows for every push and pull
+request. Pushing a version tag (`git tag v0.2.0 && git push origin v0.2.0`)
+also builds release binaries for Linux x86_64, macOS (Apple Silicon and Intel)
+and Windows x86_64 and attaches them, with checksums, to a GitHub release, which
+is what the one-line installers download.
+
+## Contributing
+
+Issues and pull requests are welcome. Please run `cargo fmt`, clippy and
+`cargo test` before opening a PR, and include the Claude Code / Codex app
+versions and your OS when reporting a bug (`idlepack status` output helps).
 
 ## Prior art
 
@@ -202,4 +238,6 @@ its research showed the two routes idlepack takes — a mod running `/compact` i
 the Desktop Code tab, and a `CODEX_CLI_PATH` shim around the Codex app-server.
 idlepack is an independent, automatic, single-binary take on the same idea.
 
-MIT licensed.
+## License
+
+[MIT](LICENSE).

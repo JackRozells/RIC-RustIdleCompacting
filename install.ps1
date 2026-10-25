@@ -1,16 +1,17 @@
 # idlepack installer for Windows, in the style of rtk's.
 #
 #   From a checkout:   powershell -ExecutionPolicy Bypass -File install.ps1
-#   From GitHub:       $env:IDLEPACK_REPO='OWNER/idlepack'; irm https://raw.githubusercontent.com/OWNER/idlepack/main/install.ps1 | iex
+#   From GitHub:       irm https://raw.githubusercontent.com/JackRozells/RIC-RustIdleCompacting/main/install.ps1 | iex
 #
 # Installs the prebuilt release binary when the repository publishes one
 # (see .github/workflows/release.yml), otherwise builds with cargo, then runs
-# `idlepack init`. Variables: IDLEPACK_REPO, IDLEPACK_BIN_DIR (default
+# `idlepack init`. Variables: IDLEPACK_REPO (default
+# JackRozells/RIC-RustIdleCompacting), IDLEPACK_BIN_DIR (default
 # %LOCALAPPDATA%\idlepack\bin), IDLEPACK_FROM_SOURCE=1, IDLEPACK_NO_INIT=1,
 # IDLEPACK_DOWNLOAD_BASE.
 $ErrorActionPreference = 'Stop'
 
-$repo = $env:IDLEPACK_REPO
+$repo = if ($env:IDLEPACK_REPO) { $env:IDLEPACK_REPO } else { 'JackRozells/RIC-RustIdleCompacting' }
 $binDir = if ($env:IDLEPACK_BIN_DIR) { $env:IDLEPACK_BIN_DIR } else { Join-Path $env:LOCALAPPDATA 'idlepack\bin' }
 $checkout = $null
 if ($PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot 'Cargo.toml'))) {
