@@ -150,6 +150,32 @@ fn init_status_hook_and_uninstall_leave_the_settings_as_they_were() {
 }
 
 #[test]
+fn the_stop_hook_runs_the_path_link_not_the_versioned_binary() {
+    // As Homebrew installs it: the binary in a versioned folder, a link to it on the PATH.
+    let home = scratch("pathlink");
+    std::fs::create_dir_all(home.join(".claude")).unwrap();
+    let bin = home.join("bin");
+    std::fs::create_dir_all(&bin).unwrap();
+    let link = bin.join("idlepack");
+    std::os::unix::fs::symlink(env!("CARGO_BIN_EXE_idlepack"), &link).unwrap();
+    let out = Command::new(&link)
+        .args(["init", "--claude"])
+        .env("HOME", &home)
+        .env_remove("IDLEPACK_HOME")
+        .env_remove("CLAUDE_CONFIG_DIR")
+        .env("PATH", format!("/usr/bin:/bin:{}", bin.display()))
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "{}", text(&out));
+    let settings = read(&home.join(".claude/settings.json"));
+    assert_eq!(
+        settings["hooks"]["Stop"][0]["hooks"][0]["command"],
+        json!(format!("{} hook claude-stop", link.display()))
+    );
+    let _ = std::fs::remove_dir_all(&home);
+}
+
+#[test]
 fn a_settings_file_that_is_not_json_is_left_alone() {
     let home = scratch("badjson");
     let settings_path = home.join(".claude/settings.json");

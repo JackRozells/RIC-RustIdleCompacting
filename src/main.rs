@@ -26,6 +26,7 @@ mod userenv;
 
 use clap::{Parser, Subcommand};
 use std::ffi::OsString;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 #[derive(Parser)]
@@ -113,16 +114,31 @@ fn bullet(lines: &[String]) {
     }
 }
 
-fn this_exe() -> std::path::PathBuf {
+/// This binary's path, as the Stop hook records it. A package manager that keeps
+/// each version in a folder of its own (Homebrew's Cellar) links the binary onto
+/// the PATH, and the link outlives an upgrade where the versioned path does not,
+/// so an entry on the PATH that is this same file wins over the resolved path.
+fn this_exe() -> PathBuf {
     let exe = std::env::current_exe().unwrap_or_else(|_| "idlepack".into());
-    std::fs::canonicalize(&exe).map(strip_verbatim).unwrap_or(exe)
+    let real = std::fs::canonicalize(&exe).map(strip_verbatim).unwrap_or(exe);
+    link_on_path(&real, std::env::var_os("PATH")).unwrap_or(real)
+}
+
+/// The first entry on `path_var` with this binary's name that is the same file as `real`.
+fn link_on_path(real: &Path, path_var: Option<OsString>) -> Option<PathBuf> {
+    let name = real.file_name()?;
+    let target = std::fs::canonicalize(real).ok()?;
+    std::env::split_paths(&path_var?)
+        .filter(|dir| dir.is_absolute())
+        .map(|dir| dir.join(name))
+        .find(|candidate| std::fs::canonicalize(candidate).map(|c| c == target).unwrap_or(false))
 }
 
 /// `\\?\C:\...` (what canonicalize gives on Windows) back to `C:\...`.
-fn strip_verbatim(p: std::path::PathBuf) -> std::path::PathBuf {
+fn strip_verbatim(p: PathBuf) -> PathBuf {
     let text = p.to_string_lossy();
     match text.strip_prefix(r"\\?\") {
-        Some(rest) if !rest.starts_with("UNC\\") => std::path::PathBuf::from(rest),
+        Some(rest) if !rest.starts_with("UNC\\") => PathBuf::from(rest),
         _ => p,
     }
 }
@@ -318,5 +334,35 @@ fn main() -> ExitCode {
             eprintln!("idlepack: {err}");
             ExitCode::FAILURE
         }
+    }
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn a_link_on_the_path_wins_over_the_versioned_path() {
+        let root = std::env::temp_dir().join(format!("idlepack-test-{}-cellar", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        let cellar = root.join("Cellar/idlepack/0.2.0/bin");
+        let bin = root.join("bin");
+        let other = root.join("other");
+        for dir in [&cellar, &bin, &other] {
+            fs::create_dir_all(dir).unwrap();
+        }
+        let real = cellar.join("idlepack");
+        fs::write(&real, "real").unwrap();
+        fs::write(other.join("idlepack"), "some other idlepack").unwrap();
+        std::os::unix::fs::symlink(&real, bin.join("idlepack")).unwrap();
+
+        let path = std::env::join_paths([&other, &bin]).unwrap();
+        assert_eq!(link_on_path(&real, Some(path)), Some(bin.join("idlepack")));
+        // Nothing on the PATH is this binary, or there is no PATH: keep the resolved path.
+        assert_eq!(link_on_path(&real, Some(std::env::join_paths([&other]).unwrap())), None);
+        assert_eq!(link_on_path(&real, Some("relative/bin".into())), None);
+        assert_eq!(link_on_path(&real, None), None);
+        let _ = fs::remove_dir_all(&root);
     }
 }
