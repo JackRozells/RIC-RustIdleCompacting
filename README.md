@@ -1,6 +1,7 @@
 # idlepack
 
 [![ci](https://github.com/JackRozells/RIC-RustIdleCompacting/actions/workflows/release.yml/badge.svg)](https://github.com/JackRozells/RIC-RustIdleCompacting/actions/workflows/release.yml)
+[![crates.io](https://img.shields.io/crates/v/idlepack.svg)](https://crates.io/crates/idlepack)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **RIC: Rust Idle Compacting.** Idle compaction for the **Claude** and **Codex
@@ -38,6 +39,13 @@ The installer downloads the prebuilt binary for your platform from the
 (checking its SHA-256), or builds from source with cargo if there isn't one,
 then runs `idlepack init`. Building from source needs Rust; see
 [rustup.rs](https://rustup.rs).
+
+From [crates.io](https://crates.io/crates/idlepack), on any platform with Rust:
+
+```sh
+cargo install idlepack
+idlepack init
+```
 
 From a checkout:
 
