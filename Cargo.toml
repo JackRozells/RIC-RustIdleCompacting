@@ -6,6 +6,8 @@ rust-version = "1.75"
 description = "Idle compaction for the Claude and Codex desktop apps: compacts a big idle session while its prompt cache is still warm."
 license = "MIT"
 readme = "README.md"
+repository = "https://github.com/JackRozells/RIC-RustIdleCompacting"
+homepage = "https://github.com/JackRozells/RIC-RustIdleCompacting"
 keywords = ["claude", "codex", "prompt-cache", "compaction", "llm"]
 categories = ["command-line-utilities", "development-tools"]
 

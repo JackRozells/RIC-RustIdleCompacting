@@ -1,0 +1,12 @@
+# Build output
+/target
+**/*.rs.bk
+
+# Generated Claude Code plugin types
+mod/.claude-plugin/types/
+
+# OS / editor clutter
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

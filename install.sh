@@ -2,12 +2,12 @@
 # idlepack installer for macOS and Linux, in the style of rtk's.
 #
 #   From a checkout:   sh install.sh
-#   From GitHub:       curl -fsSL https://raw.githubusercontent.com/OWNER/idlepack/main/install.sh | IDLEPACK_REPO=OWNER/idlepack sh
+#   From GitHub:       curl -fsSL https://raw.githubusercontent.com/JackRozells/RIC-RustIdleCompacting/main/install.sh | sh
 #
 # Installs a prebuilt release binary when the repository publishes one for this
 # platform (see .github/workflows/release.yml), otherwise builds with cargo, then
 # runs `idlepack init`. Variables:
-#   IDLEPACK_REPO          owner/name on GitHub (needed when not run from a checkout)
+#   IDLEPACK_REPO          owner/name on GitHub (default JackRozells/RIC-RustIdleCompacting)
 #   IDLEPACK_BIN_DIR       where a prebuilt binary goes (default ~/.local/bin)
 #   IDLEPACK_FROM_SOURCE=1 always build with cargo
 #   IDLEPACK_NO_INIT=1     install the binary only
@@ -17,7 +17,7 @@ set -eu
 say() { printf '%s\n' "$*"; }
 die() { printf 'idlepack install: %s\n' "$*" >&2; exit 1; }
 
-REPO="${IDLEPACK_REPO:-}"
+REPO="${IDLEPACK_REPO:-JackRozells/RIC-RustIdleCompacting}"
 BIN_DIR="${IDLEPACK_BIN_DIR:-$HOME/.local/bin}"
 HERE=""
 case "$0" in
